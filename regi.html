@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>會員註冊</title>
+	<link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.4.5.min.css">
+	<script src="js/jquery-2.1.0.min.js"></script>
+	<script src="js/jquery.mobile-1.4.5.min.js"></script>
+
+</head>
+<body>
+	
+		<div data-role="page">
+    	<script>
+		var flag_username = false;
+		var flag_password = false;
+		var flag_email = false;
+		$(function(){
+
+				$("#username").bind("input propertychange",function(){
+					if($(this).val().length >4 && $(this).val().length <9 ){
+							$("#error_username").html("");
+							flag_username = true;
+
+							var jsonData = {};
+							jsonData["username"] = $(this).val(); 
+								console.log(JSON.stringify(jsonData));
+							$.ajax({
+								type: "POST",
+								url: "member_check_api.php",
+								data: JSON.stringify(jsonData),
+								dataType: "json",
+								success: showdata_checkuni,
+								error: function(){
+									alert("error-member_check_api.php");
+								}
+							});		
+							
+					}else{
+							$("#error_username").html("字數5~8個字");
+							$("#error_username").css("color","red");
+							flag_username = false;
+					}
+				});
+                
+            	$("#cancel").bind("click", function(){
+    	
+    				location.href="index.html";
+    			});
+                
+				$("#password").bind("input propertychange",function(){
+					if($(this).val().length >4 && $(this).val().length <9 ){
+							$("#error_password").html("");
+							flag_password = true;
+					}else{
+							$("#error_password").html("字數5~8個字");
+							$("#error_password").css("color","red");
+							flag_password = false;
+					}
+				});
+
+
+				$("#email").bind("input propertychange",function(){
+					if($(this).val().length > 4 ){
+							$("#error_email").html("");
+							flag_email = true;
+					}else{
+							$("#error_email").html("字數4個字以上");
+							$("#error_email").css("color","red");
+							flag_email = false;
+					}
+				});	
+			$("#confirm").bind("click",function(){
+
+				if(flag_username && flag_password && flag_email){
+					console.log($("#username").val());
+					console.log($("#password").val());
+					console.log($("#email").val());
+					console.log($("#bday").val());
+					console.log($("#cellphone").val());
+					console.log($("#edu").val());
+					console.log($("#address").val());
+					console.log($("#fstar").val());
+					
+					var gd = "";
+						$.each($("input[name='gender']:checked"),function(){
+								gd = $(this).val();	
+						});	
+						console.log(gd);
+
+					var interestData = [];
+						$.each($("input[name='interest']:checked"),function(){
+								interestData.push($(this).val());
+						});
+						console.log(interestData.join("-")); 
+
+					var jasonData = {};
+						jasonData["username"]=$("#username").val();
+						jasonData["password"]=$("#password").val();
+						jasonData["email"]=$("#email").val();
+						jasonData["bday"]=$("#bday").val();
+						jasonData["cellphone"]=$("#cellphone").val();
+						jasonData["edu"]=$("#edu").val();
+						jasonData["address"]=$("#address").val();
+						jasonData["gender"]=gd;
+						jasonData["fstar"]=$("#fstar").val();
+						jasonData["interest"]=interestData.join("-");
+							console.log	(jasonData);
+
+
+						$.ajax({
+								type:"POST",
+								url:"members_C_api.php",
+								data:JSON.stringify(jasonData),
+								dataType:"json",
+								success:showdata,
+								error:function(){
+									alert("error-members_C_api.php");
+								}
+						});
+				}else{
+					alert("輸入錯誤!");
+				}	
+			});		
+		});
+
+		function showdata(data){
+			if(data.state){
+				alert(data.message);
+				setCookie("uuid", "", 7);
+				location.href = "login.html";
+			}else{
+				alert(data.message);
+			}
+		}
+		// function showdata(data){
+		// 	console.log(data);
+		// 	if(data.state){
+		// 			alert(data.message);
+		// 			setCookie("uuid", "", 7);
+		// 			location.href="login.html";
+		// 	}else{
+		// 			alert(data.message);
+		// 	}
+		// }
+
+		function showdata_checkuni(data){
+			if(data.state){
+				alert(data.message);
+				flag_username = true;
+			}else{
+				alert(data.message);
+				flag_username = false;
+			}
+		}
+
+		function setCookie(cname, cvalue, exdays) {
+		  const d = new Date();
+		  d.setTime(d.getTime() + (exdays*24*60*60*1000));
+		  let expires = "expires="+ d.toUTCString();
+		  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+		}
+
+	</script>
+			<div data-role="header" data-theme="b">
+				<h1>會員註冊</h1>			
+			</div>
+			<div data-role="main" class="ui-content">
+				<div data-role="filedcontain">
+					<label for="username">帳號</label>
+					<input type="text" name="username" id="username" value="" placeholder="帳號5~8個字數!">
+				</div>
+			</div>	
+			<div id="error_username"></div>
+
+			<div data-role="main" class="ui-content">
+				<div data-role="filedcontain">
+					<label for="password">密碼</label>
+					<input type="password" name="password" id="password" value="" placeholder="密碼5~8個字數!">
+				</div>
+			</div>
+			<div id="error_password"></div>
+
+			<div data-role="main" class="ui-content">
+				<div data-role="filedcontain">
+					<label for="email">Email</label>
+					<input type="email" name="email" id="email" value="" placeholder="Email4個字以上!">
+				</div>
+			</div>
+			<div id="error_email"></div>
+			<div data-role="main" class="ui-content">
+				<div data-role="filedcontain">
+					<label for="bday">生日</label>
+					<input type="date" name="bday" id="bday" value="">
+				</div>
+			</div>
+			<div data-role="main" class="ui-content">
+				<div data-role="filedcontain">
+					<label for="cellphone">手機號碼</label>
+					<input type="tel" name="cellphone" id="cellphone" value="">
+				</div>
+			</div>
+			<div data-role="filedcontain">
+				<label for="edu">教育程度</label>
+				<select name="edu" id="edu">
+					<option value="碩博士">碩博士</option>
+					<option value="大學專科">大學(專科)</option>
+					<option value="高中職">高中(職)</option>
+					<option value="其他">其他</option>
+				</select>
+			</div>
+			<div data-role="filedcontain">
+				<label for="address">住址</label>
+				<input type="text" name="address" id="address" value="">
+			</div>
+			<div data-role="fieldcontain">
+			  <fieldset data-role="controlgroup">
+			 	 <legend>性別</legend>
+			 		 <input type="radio" name="gender" id="male"  value="male" />
+			 		 	<label for="male">男性</label>
+			 		 <input type="radio" name="gender" id="female"  value="female" />
+			 		 	<label for="female">女性</label>
+			  </fieldset>
+			</div>
+			
+			<div data-role="filedcontain">
+				<label for="fstar">最愛明星</label>
+				<input type="text" name="fstar" id="fstar" value="">
+			</div>
+			<div data-role="fieldcontain">
+			 <fieldset data-role="controlgroup">
+				 <legend>興趣</legend>
+					 <input type="checkbox" name="interest" id="interest01"  value="登山" />
+					 	<label for="interest01">登山</label>
+					 <input type="checkbox" name="interest" id="interest02"  value="上暗網" />
+					 	<label for="interest02">上暗網</label>
+					 <input type="checkbox" name="interest" id="interest03"  value="品酒" />
+					 	<label for="interest03">品酒</label>
+					 <input type="checkbox" name="interest" id="interest04"  value="電影" />
+					 	<label for="interest04">電影</label>
+			 </fieldset>
+			</div>
+			<div class="ui-grid-a">
+				<div class="ui-block-a">
+					<a href="#" class="ui-btn" id="cancel">取消</a>
+				</div>
+				<div class="ui-block-b">
+					<a href="#" class="ui-btn" id="confirm">確認</a>
+				</div>
+			</div>
+
+			<div data-role="footer" data-position="fixed" data-theme="b">
+				<h1>頁尾</h1>
+			</div>
+		</div>
+		
+	
+</body>
+</html>

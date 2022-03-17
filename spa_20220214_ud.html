@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+    <!-- //載入fontawosome!!需要! -->
+    <link rel="stylesheet" href="css/all.min.css"> 
+    <!-- // 載入 WOW 需要!-->
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+     
+    <title>活動~通!</title>
+    
+  <script src="js/jquery-2.1.0.min.js"></script>
+    <!-- 會員api script below -->
+  <script>
+   // ----------login----------- // 
+	    var flag_username = false;
+		var flag_password = false;
+		var flag_email = false;	
+		var flag_repassword = false;
+		var flag_checked = false;
+		var passwd = null;
+		// var uuid = getCookie(data.uuid); 
+		var uuid = getCookie("uuid"); 
+		$(function(){
+
+		if( uuid != ""){
+			var jasonData={};
+			jasonData["uuid"] = uuid;
+
+			$.ajax({
+				type:"POST",
+				url: "member_check_uuid_api.php",
+				data:JSON.stringify(jasonData),
+				dataType: "json",
+				success: showdata_checkuuid,
+				error:function(){
+					alert("error-member_check_uuid_api.php");
+				}
+
+			});
+		}
+
+		$("#confirm").bind("click",function(){
+			var jsonData = {};
+				jsonData["username"]= $("#username").val();
+				jsonData["password"]= $("#password").val();
+				console.log(JSON.stringify(jsonData));
+
+				$.ajax({
+					type:"POST",
+					url:"member_login_api.php",
+					data:JSON.stringify(jsonData),
+					dataType:"json",
+					success:showdata,
+					error:function(){
+						alert("error-member_login_api");
+					}
+				});
+			});
+
+		//---------- register ---------//
+		$("#username_rgi").bind("input propertychange",function(){
+					if($(this).val().length >4 && $(this).val().length <9 ){
+							$("#error_username").html("");
+							flag_username = true;
+
+							var jsonData = {};
+							jsonData["username"] = $(this).val(); 
+								console.log(JSON.stringify(jsonData));
+							$.ajax({
+								type: "POST",
+								url: "member_check_api.php",
+								data: JSON.stringify(jsonData),
+								dataType: "json",
+								success: showdata_checkuni,
+								error: function(){
+									alert("error-member_check_api.php");
+								}
+							});		
+							
+					}else{
+							$("#error_username").html("字數5~8個字");
+							$("#error_username").css("color","red");
+							flag_username = false;
+					}
+				});
+
+				$("#password_rgi").bind("input propertychange",function(){
+					if($(this).val().length >4 && $(this).val().length <9 ){
+							$("#error_password").html("");
+							flag_password = true;
+							passwd = $("#password_rgi").val();
+							console.log(passwd);
+					}else{
+							$("#error_password").html("字數5~8個字");
+							$("#error_password").css("color","red");
+							flag_password = false;
+					}
+				});
+                
+                // retypepassword
+                  
+				$("#retypepassword").bind("input propertychange",function(){
+				    console.log($(this).val());
+				    console.log(passwd);
+					if($("#retypepassword").val() === passwd){
+							$("#error_retypepassword").html("");
+							flag_repassword = true;
+					}else{
+							$("#error_retypepassword").html("與設定密碼不符");
+							$("#error_retypepassword").css("color","red");
+							flag_repassword = false;
+					}
+				});
+
+				$("#email").bind("input propertychange",function(){
+					if($(this).val().length > 4 ){
+							$("#error_email").html("");
+							flag_email = true;
+					}else{
+							$("#error_email").html("字數4個字以上");
+							$("#error_email").css("color","red");
+							flag_email = false;
+					}
+				});	
+			  
+			$("#confirm_rgi").bind("click",function(){
+				if(flag_username && flag_password && flag_email && 
+				    flag_repassword){
+					console.log($("#username_rgi").val());
+					console.log($("#password_rgi").val());
+					console.log($("#email").val());
+					
+					var chk = $("#defaultCheck1");
+                    var checked = chk.is(':checked');
+                    if (checked) {
+                     var jasonData = {};
+						jasonData["username"]=$("#username_rgi").val();
+						jasonData["password"]=$("#password_rgi").val();
+						jasonData["email"]=$("#email").val();
+							console.log(jasonData);
+						$.ajax({
+								type:"POST",
+								url:"members_CN_api.php",
+								data:JSON.stringify(jasonData),
+								dataType:"json",
+								success:showdata,
+								error:function(){
+									alert("error-members_CN_api.php");
+								}
+						});
+                    } else {
+                      alert("未同意使用者條款!");
+                    }
+					
+				}else{
+					alert("輸入錯誤!");
+				}	
+			});	
+
+		});
+
+		function showdata(data){
+			if(data.state){
+				alert(data.message);
+				setCookie("uuid", data.uuid, 7);
+				location.href="login.html";
+			 //   $("#regiModal").modal('hide');
+				// $("#loginModal").modal('show');
+			}else{
+				alert(data.message);
+			}
+		}
+
+		function showdata_checkuuid(data){
+			if(data.state){
+				alert(data.message);
+				location.href="userPanel.html";
+			}
+		}
+
+		function showdata_checkuni(data){
+			if(data.state){
+				alert(data.message);
+				flag_username = true;
+			}else{
+				alert(data.message);
+				flag_username = false;
+			}
+		}
+
+		function setCookie(cname, cvalue, exdays) {
+		  const d = new Date();
+		  d.setTime(d.getTime() + (exdays*24*60*60*1000));
+		  let expires = "expires="+ d.toUTCString();
+		  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+		}
+
+		function getCookie(cname) {
+		  let name = cname + "=";
+		  let decodedCookie = decodeURIComponent(document.cookie);
+		  let ca = decodedCookie.split(';');
+		  for(let i = 0; i <ca.length; i++) {
+		    let c = ca[i];
+		    while (c.charAt(0) == ' ') {
+		      c = c.substring(1);
+		    }
+		    if (c.indexOf(name) == 0) {
+		      return c.substring(name.length, c.length);
+		    }
+		  }
+		  return "";
+		}
+	</script>
+	<style>
+    	body{
+    		font-family: Microsoft JhengHei;
+    	}
+    	.bg-cover{
+    		background-position: center center;
+    		background-size: cover;
+    	}
+    	.carousel-caption{
+    		background-color: rgba(0, 0, 0, 0.5);
+    	}
+    	@media screen and (max-width: 768px) {
+    		.section-5-text{
+    			color: white;
+    			background-color: rgba(0, 0, 0, 0.5);
+    			padding: 10px;
+    			margin-top: 10px;
+    			margin-bottom: 10px;
+    		}
+	    }
+    </style>
+  </head>
+  <body>
+  	<!-- ************section 1******************* -->
+    <section class="bg-secondary">
+    	<div class="container text-right">
+    		<i class="fab fa-facebook-square text-white"></i>
+    		<i class="fab fa-twitter-square text-white"></i>
+    		<i class="fab fa-spotify text-white"></i>
+    	</div>
+    </section>
+
+
+    <!-- ************section 2******************* -->
+    <section class="bg-dark">
+    	<div class="container">
+			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+			  <a class="navbar-brand" href="#">
+			  	<i class="far fa-hand-spock text-danger wow animate__rubberBand"
+    			data-wow-duration="2s" data-wow-iteration="infinite"></i>
+			  </a>
+			  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			    <span class="navbar-toggler-icon"></span>
+			  </button>
+
+			  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+			    <ul class="navbar-nav">
+			      <li class="nav-item active">
+			        <a class="nav-link" href="#">首頁 <span class="sr-only">(current)</span></a>
+			      </li>
+			     <li class="nav-item">
+			        <a class="nav-link" href="https://iyung0926.000webhostapp.com/20220221-maskmap.html">口罩地圖</a>
+			      </li>
+			      <li class="nav-item">
+			        <a class="nav-link" href="https://iyung0926.000webhostapp.com/20220221-speed.html">各區定點測速照相地圖</a>
+			      </li>
+			       <li class="nav-item">
+			        <a class="nav-link" href="https://iyung0926.000webhostapp.com/20220221-HIspeed.html">國道定點測速照相地圖</a>
+			      </li>
+			      <li class="nav-item dropdown">
+			        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-expanded="false">
+			          活動項目
+			        </a>
+			        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+			          <a class="dropdown-item" href="#">電音派對</a>
+			          <a class="dropdown-item" href="#">節日慶典</a>
+			          <div class="dropdown-divider"></div>
+			          <a class="dropdown-item" href="#">各種活動派對</a>
+			        </div>
+			      </li>
+			    </ul>
+			    <form class="form-inline my-2 my-lg-0 ml-auto">
+			    	<a href="#" class="btn btn-outline-primary mr-2 wow animate__jello" data-wow-delay="1s" data-wow-duration="2s" data-wow-iteration="infinite" data-toggle="modal" data-target="#loginModal" >登入</a>
+			    	<a href="#" class="btn btn-primary mr-2 wow animate__jello"  data-wow-duration="1s" data-wow-delay="2s" data-wow-iteration="infinite" data-toggle="modal" data-target="#regiModal" >註冊</a>
+			    </form>
+			  </div>
+			</nav>
+    	</div>
+    </section>
+
+    <!-- loginModal -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header bg-warning">
+	        <h5 class="modal-title font-weight-bold" id="exampleModalLabel">會員登入</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	        <div class="form-group">
+	        	<label for="">帳號</label>
+	        	<input type="text" class="form-control" id="username">
+	        </div>
+	        <div class="form-group">
+	        	<label for="">密碼</label>
+	        	<input type="password" class="form-control" id="password">
+	        </div>
+	      </div>
+	      <div class="modal-footer">
+	      	<a href="#" class="mr-auto" data-toggle="modal" data-target="#regiModal" data-dismiss="modal">註冊帳號</a>
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="cancel">取消</button>
+	        <button type="button" class="btn btn-primary" id="confirm">確認</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!-- regiModal -->
+	<div class="modal fade" id="regiModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog modal-xl">
+	    <div class="modal-content">
+	      <div class="modal-header bg-info">
+	        <h5 class="modal-title font-weight-bold" id="exampleModalLabel">會員註冊</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body">
+	        <div class="row">
+	        	<div class="col-md-6">
+	        		<p class="h2">會員條款</p>
+	        		<p>站點那種一臉陽光一顆進了加油一邊，演員驚訝拍攝避免裝置令人能夠先進性簡歷加上更大改革會在範圍時，不。</p>
+	        		<p>充分承受每一個再也外資臉色聯盟想像清晰上了主持收購接到權威，玻璃而是字元長期航空聊天一致實施收，無。</p>
+	        		<p>讓人就不指揮彩色仔細一大韓國缺乏一款觀念這位教，開展十大慢慢感動眼神進，對象圖書任何人程度其中的是。</p>
+	        		<p>平均教學下載地址廣場分類年輕人對此的錢母親完善明年詳細回，下了字幕頻道得到到了他在大，主持一套具備。</p>
+	        	</div>
+	        <div class="col-md-6">
+	        		<div class="form-group">
+	        			<label for="">帳號</label>
+	        			<input type="text" class="form-control" id="username_rgi">
+	        		</div>
+	        		<div id="error_username"></div>
+	        		<div class="form-group">
+	        			<label for="">密碼</label>
+	        			<input type="text" class="form-control" id="password_rgi">
+	        		</div>
+	        		<div id="error_password"></div>	        			
+	        		<div class="form-group">
+	        			<label for="">確認密碼</label>
+	        			<input type="text" class="form-control" id="retypepassword">
+	        		</div>
+	        		<div id="error_retypepassword"></div>
+	        		<div class="form-group">
+	        			<label for="">Email</label>
+	        			<input type="text" class="form-control" id="email">
+	        		</div>
+	        		<div id="error_email"></div>
+	        		<div class="form-check">
+							  <input class="form-check-input" type="checkbox" value="Yes" id="defaultCheck1">
+							  <label class="form-check-label" for="defaultCheck1">
+							    遵守會員條款
+							  </label>
+							</div>
+	        	</div>
+	        </div>
+	      </div>
+	      <div class="modal-footer">
+	      	<a href="#" class="mr-auto" data-toggle="modal" data-target="#loginModal" data-dismiss="modal" >已有帳號，登入去!</a>
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+	        <button type="button" class="btn btn-primary" id="confirm_rgi">確認</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+    <!-- ************section 3******************* -->
+    <section>
+		<div id="carouselExampleCaptions" class="carousel slide" data-ride="carousel">
+		  <ol class="carousel-indicators">
+		    <li data-target="#carouselExampleCaptions" data-slide-to="0" class="active"></li>
+		    <li data-target="#carouselExampleCaptions" data-slide-to="1"></li>
+		    <li data-target="#carouselExampleCaptions" data-slide-to="2"></li>
+		  </ol>
+		  <div class="carousel-inner">
+		    <div class="carousel-item bg-cover active" style="background-image: url(images/party001.jpg); height:50vh;">
+		      <div class="carousel-caption d-none d-md-block p-3">
+		        <h5>電視認真另一找不到做出搜索引。</h5>
+		        <p>傳播不起走到接下來智能金錢，作戰而在兩人界面一片股份有限公司展，對比一方面當我打電話的是破解其他期間，表明以前來了官方老師等級不錯，此時儘快當中在此他就授權顯得戰，前進特性感到連接稱為根據浙江一，數學人數再說女子快樂不會高級最好有一定供應理念二手，你看主板音頻解放收藏本頁身材一台互動前來記得大幅，。</p>
+		      </div>
+		    </div>
+		    <div class="carousel-item bg-cover" style="background-image: url(images/party002.jpg); height:50vh;">
+		      <div class="carousel-caption d-none d-md-block p-3">
+		        <h5>電視認真另一找不到做出搜索引。</h5>
+		        <p>傳播不起走到接下來智能金錢，作戰而在兩人界面一片股份有限公司展，對比一方面當我打電話的是破解其他期間，表明以前來了官方老師等級不錯，此時儘快當中在此他就授權顯得戰，前進特性感到連接稱為根據浙江一，數學人數再說女子快樂不會高級最好有一定供應理念二手，你看主板音頻解放收藏本頁身材一台互動前來記得大幅，。</p>
+		      </div>
+		    </div>
+		    <div class="carousel-item bg-cover" style="background-image: url(images/party003.jpg); height:50vh;">
+		     <div class="carousel-caption d-none d-md-block p-3">
+		        <h5>電視認真另一找不到做出搜索引。</h5>
+		        <p>傳播不起走到接下來智能金錢，作戰而在兩人界面一片股份有限公司展，對比一方面當我打電話的是破解其他期間，表明以前來了官方老師等級不錯，此時儘快當中在此他就授權顯得戰，前進特性感到連接稱為根據浙江一，數學人數再說女子快樂不會高級最好有一定供應理念二手，你看主板音頻解放收藏本頁身材一台互動前來記得大幅，。</p>
+		      </div>>
+		    </div>
+		  </div>
+		  <button class="carousel-control-prev" type="button" data-target="#carouselExampleCaptions" data-slide="prev">
+		    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+		    <span class="sr-only">Previous</span>
+		  </button>
+		  <button class="carousel-control-next" type="button" data-target="#carouselExampleCaptions" data-slide="next">
+		    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+		    <span class="sr-only">Next</span>
+		  </button>
+		</div>
+    </section>
+
+
+	 <!-- ************section 4******************* -->
+	 <section class="bg-info wow animate__fadeInDown" data-wow-delay="0.5s" data-wow-duration="1s">
+	 	<div class="container">
+	 		<div class="row">
+	 			<div class="col-md-4 text-white text-center p-3  wow animate__heartBeat" data-wow-delay="1s" data-wow-duration="2s">
+	 				<i class="fab fa-twitter-square text-white fa-6x" ></i>
+	 				<p class="h3 mt-3">實體虛擬</p>
+	 				<p>就算教育快捷中有輕輕將在組圖一陣他也有什麼利潤或是，命運流行你不操作之後性質每次左右流程或，一隻證實傢俱因此課堂訪問平靜很多證券記憶十年庫存完善醫院顯示，商機股市小組小孩網通證券物理到來人群買，廣告。</p>
+	 			</div>
+	 			<div class="col-md-4 text-white text-center p-3 wow animate__heartBeat" data-wow-delay="2s" data-wow-duration="2s">
+	 				<i class="fab fa-airbnb fa-6x text-danger" ></i>
+	 				<p class="h3 mt-3">電玩體育</p>
+	 				<p>就算教育快捷中有輕輕將在組圖一陣他也有什麼利潤或是，命運流行你不操作之後性質每次左右流程或，一隻證實傢俱因此課堂訪問平靜很多證券記憶十年庫存完善醫院顯示，商機股市小組小孩網通證券物理到來人群買，廣告。</p>
+	 			</div>
+	 			<div class="col-md-4 text-white text-center p-3 wow animate__heartBeat" data-wow-delay="3s" data-wow-duration="2s">
+	 				<i class="fas fa-gamepad fa-6x text-muted" ></i>
+	 				<p class="h3 mt-3">老少咸宜</p>
+	 				<p>就算教育快捷中有輕輕將在組圖一陣他也有什麼利潤或是，命運流行你不操作之後性質每次左右流程或，一隻證實傢俱因此課堂訪問平靜很多證券記憶十年庫存完善醫院顯示，商機股市小組小孩網通證券物理到來人群買，廣告。</p>
+	 			</div>
+	 		</div>
+	 	</div>
+	 </section>
+
+	 <!-- ************section 5******************* -->
+	 <section style="position: relative;" class="wow animate__fadeInDown" data-wow-duration="1s">
+		 	<div class="row">
+		 		<div class="col-md-5 bg-cover" style="position: absolute; background-image: url(images/pretty.jpg); top: 0; bottom: 0;">
+		 		</div>
+		 	</div>
+		 	<div class="container">
+		 		<div class="row justify-content-end">
+		 			<div class="col-md-7 mt-3 section-5-text">
+		 				<p class="h2">上海廣場保險興奮大盤</p>
+		 				<p>進行所有作者研究思考期間禮品資本是在我家個人職工較高支持到，發表自信根本江蘇適用，趕緊人生日前同意。發佈日期故意改革文件大小運用經典壓力範圍內顯卡上，我覺得吃了你也界面文件第一章查看留言休閒經驗發展每。</p>
+		 				<a href="#" class="btn btn-outline-info">查看更多</a>
+		 				<div class="row my-3">
+		 					<div class="col-md-6">
+		 						<p class="h3">級別回覆正確大概點擊</p>
+		 						<p>小子結束可憐符合展示簡介專輯正確像是每頁常常什麼事，孩子共和國再也想到浪，階段破壞肌膚明顯只見，實。</p>
+		 					</div>
+		 					<div class="col-md-6">
+		 						<p class="h3">公開到底日常指數結婚</p>
+		 						<p>全文群發有的人民政府從此內存授權方式本人深深先生愛情連，桌面具有快樂安徽驅動一，認定供應商下載等級。</p>
+		 					</div>
+		 				</div>
+		 			</div>
+		 		</div>
+		 	</div>
+	 </section>
+	 <!-- ************section 6******************* -->
+	 <section>	
+	  <div class="container wow animate__zoomIn" data-wow-duration="1s">
+		 	<h2 class="text-center font-weight-bold mt-4">
+		 		實驗節目請大家註冊時間模型會計專
+		 	</h2>
+			 	<div class="row" >
+			 		<div class="col-md-6">
+			 			<div class="d-flex">
+			 				<i class="fab fa-facebook-square fa-5x text-success pt-4 pr-4 "></i>
+			 				<div class="div">
+			 					<p class="h2">主題一</p>
+			 					<p>執行方向包裝失去實現涉及私服吃場共享版建材節目以外高速，事業課堂文明試題解壓密碼個人保險傳真責任妻子實現日子總結，看看廈門機票跟着請問一款創作說完，友情要在原本汽車有機會方便健康圍繞貼子男生老，因為作出但在一支的話工，中文版招商數碼相機網站完整，幾年濟南留學取消適用便宜進去提供第二章聰明新。</p>
+			 				</div>
+			 			</div>
+			 		</div>
+			 		<div class="col-md-6 ">
+			 			<div class="d-flex">
+			 				<i class="fab fa-twitter-square text-danger fa-5x pt-4 pr-4 "></i>
+			 				<div class="div">
+			 					<p class="h2">主題二</p>
+			 					<p>執行方向包裝失去實現涉及私服吃場共享版建材節目以外高速，事業課堂文明試題解壓密碼個人保險傳真責任妻子實現日子總結，看看廈門機票跟着請問一款創作說完，友情要在原本汽車有機會方便健康圍繞貼子男生老，因為作出但在一支的話工，中文版招商數碼相機網站完整，幾年濟南留學取消適用便宜進去提供第二章聰明新。</p>
+			 				</div>
+			 			</div>
+			 		</div>
+			 </div>
+			 <div class="row">
+			 		<div class="col-md-6">
+			 			<div class="d-flex">
+			 				<i class="fab fa-spotify  fa-5x text-warning pt-4 pr-4 "></i>
+			 				<div class="div">
+			 					<p class="h2">主題三</p>
+			 					<p>執行方向包裝失去實現涉及私服吃場共享版建材節目以外高速，事業課堂文明試題解壓密碼個人保險傳真責任妻子實現日子總結，看看廈門機票跟着請問一款創作說完，友情要在原本汽車有機會方便健康圍繞貼子男生老，因為作出但在一支的話工，中文版招商數碼相機網站完整，幾年濟南留學取消適用便宜進去提供第二章聰明新。</p>
+			 				</div>
+			 			</div>
+			 		</div>
+			 		<div class="col-md-6">
+			 			<div class="d-flex">
+			 				<i class="fab fa-facebook-square fa-5x text-success pt-4 pr-4 "></i>
+			 				<div class="div">
+			 					<p class="h2">主題四</p>
+			 					<p>執行方向包裝失去實現涉及私服吃場共享版建材節目以外高速，事業課堂文明試題解壓密碼個人保險傳真責任妻子實現日子總結，看看廈門機票跟着請問一款創作說完，友情要在原本汽車有機會方便健康圍繞貼子男生老，因為作出但在一支的話工，中文版招商數碼相機網站完整，幾年濟南留學取消適用便宜進去提供第二章聰明新。</p>
+			 				</div>
+			 			</div>
+			 		</div>
+	 </div>
+	 </section>
+  <!-- ************section 7******************* -->
+	 <section style="position: relative;" class="wow animate__lightSpeedInRight" data-wow-duration="1s">
+	 		<div class="container">
+		 		<div class="row ">
+		 			<div class="col-md-7 mt-3 section-5-text" style="z-index: 2;">
+		 				<dl class="row"> 
+		 				<!-- 	// https://getbootstrap.com/docs/4.6/content/typography/#description-list-alignment --> -->
+						  <dt class="col-sm-3">Description lists</dt>
+						  <dd class="col-sm-9">A description list is perfect for defining terms.</dd>
+
+						  <dt class="col-sm-3">Term</dt>
+						  <dd class="col-sm-9">
+						    <p>Definition for the term.</p>
+						    <p>And some more placeholder definition text.</p>
+						  </dd>
+
+						  <dt class="col-sm-3">Another term</dt>
+						  <dd class="col-sm-9">This definition is short, so no extra paragraphs or anything.</dd>
+
+						  <dt class="col-sm-3 text-truncate">Truncated term is truncated</dt>
+						  <dd class="col-sm-9">This can be useful when space is tight. Adds an ellipsis at the end.</dd>
+
+						  <dt class="col-sm-3">Nesting</dt>
+						  <dd class="col-sm-9">
+						    <dl class="row">
+						      <dt class="col-sm-4">Nested definition list</dt>
+						      <dd class="col-sm-8">I heard you like definition lists. Let me put a definition list inside your definition list.</dd>
+						    </dl>
+						  </dd>
+						</dl>
+		 			</div>
+		 		</div>
+		 	</div>
+		 	<div class="row justify-content-end">
+		 		<div class="col-md-5 bg-cover" style="position: absolute; background-image: url(images/pretty.jpg);top: 0;bottom: 0;">
+		 		</div>
+		 	</div>
+	 </section>
+
+	  <!-- ************section 8******************* -->
+	  <section class="wow animate__lightSpeedInLeft" data-wow-duration="1s">
+	  	<div class="container">
+	  		<div class="row mt-4">
+	  			<div class="col-md-6">
+	  				<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3645.6167708970574!2d120.97762881521801!3d23.973988084479622!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3468d97bf0bec6fb%3A0x1d1251b1a9d53a1a!2z6Ie654Gj5Zyw55CG5Lit5b-D56KR!5e0!3m2!1szh-TW!2stw!4v1645068029105!5m2!1szh-TW!2stw" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+	  			</div>
+	  			<div class="col-md-6">
+	  				<div class="form-group">
+	  					<label for="">姓名</label>
+	  					<input type="text" class="form-control" id="gu" name="">
+	  				</div>
+	  				<div class="form-group">
+	  					<label for="">行動電話</label>
+	  					<input type="tel" class="form-control" id="gt" name="">
+	  				</div>
+	  				<div class="form-group">
+	  					<label for="">Email</label>
+	  					<input type="email" class="form-control" id="gm" name="">
+	  				</div>
+	  				<div class="form-group">
+	  					<label for="">人數</label>
+	  					<input type="number" class="form-control" id="gn" name="" min="0">
+	  				</div>
+	  				<div class="form-check">
+						  <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1">
+						  <label class="form-check-label" for="flexRadioDefault1">
+						   葷食
+						  </label>
+						</div>
+						<div class="form-check">
+						  <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" checked>
+						  <label class="form-check-label" for="flexRadioDefault2">
+						    素食
+						  </label>
+						</div>
+						<div class="text-right">
+  						<a href="#" class="btn btn-secondary">取消</a>
+  						<a href="#" class="btn btn-primary">確認</a>
+	  				</div>          
+	  			</div>
+	  		</div>
+	  	</div>
+	  </section>		
+
+	   <!-- ************section 9******************* -->
+	  <section>
+	  	<div class="container">
+	  		<div class="row my-3 ">
+	  			<div class="col-md-6 bg-cover wow animate__slideInUp" data-wow-duration="1s" style="background-image: url(images/party002.jpg); height: 280px;">
+						<div class="row mt-3 ml-2">
+	  					<div class="col-md-9 text-white section-5-text">
+	  						<small class="font-weight-bold  text-danger">加入我們</small>
+							<p class="h2">徵求助理數名</p>
+							<p>我現在總結小學天天手段多少修改幽默實際幫助精靈到達機會打印我，同一方面基本上模樣持續門派一股不去邀請無門賺錢我想聯賽官員，演員各級結果你看我來是以告訴我，生存。</p>
+							<a href="#" class="btn btn-outline-danger">加入我們</a>
+	  					</div>
+	  				</div>	  				
+	  			</div>
+	  			<div class="col-md-6 bg-cover wow animate__slideInUp" data-wow-duration="1s" style="background-image: url(images/party001.jpg); height: 280px;">
+						<div class="row mt-3 ml-2">
+	  					<div class="col-md-9 text-white section-5-text">
+	  						<small class="font-weight-bold badge badge-danger">加入我們</small>
+							<p class="h2">徵求經理一名</p>
+							<p>我現在總結小學天天手段多少修改幽默實際幫助精靈到達機會打印我，同一方面基本上模樣持續門派一股不去邀請無門賺錢我想聯賽官員，演員各級結果你看我來是以告訴我，生存。</p>
+							<a href="#" class="btn btn-outline-danger badge badge-danger">加入我們</a>
+	  					</div>
+	  				</div>	  				
+	  			</div>
+	  		</div>
+	  	</div>
+	  </section>	
+	   <!-- ************section 10******************* -->
+	   <section>
+	   	<div class="container">
+	   		<ul class="nav">
+				  <li class="nav-item">
+				    <a class="nav-link disabled" href="#">@copyright 202202</a>
+				  </li>
+				  <li class="nav-item">
+				    <a class="nav-link" href="#">Google</a>
+				  </li>
+				  <li class="nav-item">
+				    <a class="nav-link" href="#">Yahoo!</a>
+				  </li>
+				  <li class="nav-item">
+				    <a class="nav-link" href="#">facebook</a>
+				  </li>
+				</ul>
+	   	</div>
+	   </section>
+
+    <!-- Optional JavaScript; choose one of the two! -->
+
+    <!-- Option 1: jQuery and Bootstrap Bundle (includes Popper) -->
+    <script src="js/jquery-2.1.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous"></script>
+    <script src="js/wow.min.js"></script>
+	  <script>
+	  new WOW().init();
+	  </script>
+  </body>
+</html>

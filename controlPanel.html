@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>測試頁面</title>
+	<link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.4.5.min.css">
+	<script src="js/jquery-2.1.0.min.js"></script>
+	<script src="js/jquery.mobile-1.4.5.min.js"></script>
+	<script>
+		var u_id;
+		var uuid = getCookie("uuid"); 
+		$(function(){
+			if( uuid != ""){
+			var jasonData={};
+			jasonData["uuid"] = uuid;
+
+				$.ajax({
+					type:"POST",
+					url: "member_check_uuid_api.php",
+					data:JSON.stringify(jasonData),
+					dataType: "json",
+					success: showdata_checkuuid,
+					error:function(){
+						alert("error-member_check_uuid_api.php");
+					}
+				});
+			}else{
+				alert("請登入會員!");
+				location.href="login.html";
+			}
+
+			$("#u_btn_update").bind("click", function(){
+				console.log(u_id);
+				console.log($("#u_username").val());	
+				console.log($("#u_password").val());
+				console.log($("#u_email").val());
+				console.log($("#u_bday").val());
+				console.log($("#u_cellphone").val());
+				console.log($("#u_edu").val());
+				console.log($("#u_fstar").val());
+				var interestData = [];
+				$.each($("input[name='u_interest']:checked"), function(){
+					interestData.push($(this).val());
+				});
+				console.log(interestData.join("-"));
+				console.log($("#u_level").val());
+				var usertfLevel = '';
+					if($("#u_level").val() == "管理員"){
+						usertfLevel = 1;
+					}else if($("#u_level").val() == "A級會員"){
+						usertfLevel = 2;
+					}else if($("#u_level").val() == "B級會員"){
+						usertfLevel = 3;
+					}
+				console.log(usertfLevel);
+
+				var dataJSON = {};
+					dataJSON["ID"] = u_id;
+					dataJSON["Username"] = $("#u_username").val();
+					dataJSON["Password"] = $("#u_password").val();
+					dataJSON["Email"] = $("#u_email").val();
+					dataJSON["Bday"] = $("#u_bday").val();
+					dataJSON["Cellphone"] = $("#u_cellphone").val();
+					dataJSON["Edu"] = $("#u_edu").val();
+					dataJSON["Fstar"] = $("#u_fstar").val();
+					dataJSON["Interest"] = interestData.join("-");
+					dataJSON["Level"] = usertfLevel;
+					// dataJSON["Level"] = $("#u_level").val();
+
+					console.log(JSON.stringify(dataJSON));
+
+					$.ajax({
+						type:"POST",
+						url:"member_U_api.php",
+						data:JSON.stringify(dataJSON),	
+						dataType:"json",
+						success:showdata_update,
+						error:function(){
+							alert("error-member_U_api.php");
+						}
+					});
+				
+
+			});
+			
+		    $("#logout").bind("click", function(){
+			    delCookie("uuid");
+			    document.cookie;
+				location.href="login.html";
+			});
+			
+			$("#cancel").bind("click", function(){
+	
+				location.reload();
+			});
+			
+		});
+
+		function showdata_checkuuid(data){
+			console.log(data);
+			if(data.state){
+				if(data.data[0].Level !=1){
+					alert("無權限登入此畫面，將跳轉至一般會員頁!");
+					location.href="userPanel.html";
+				}
+
+				$.ajax({
+					type: "GET",
+					url: "members_R_api.php",
+					dataType: "json",
+					async:false,
+					success: showdata_R,
+					error: function(){
+					alert("error-members_R_api.php");
+					}
+				});
+				
+			}else{
+				alert(data.message);
+				location.href = "login.html";
+			}
+		}
+
+		function showdata_R(data){
+				console.log(data);
+				$("#mybody").empty();
+				for(var i=0; i<data.data.length; i++){
+
+					//------會員等級名稱化------
+
+					var userLevel = '';
+					if(data.data[i].Level == 1){
+						userLevel = "管理員";
+					}else if(data.data[i].Level == 2){
+						userLevel = "A級會員";
+					}else if(data.data[i].Level == 3){
+						userLevel = "B級會員";
+					}
+
+					//-------------------------
+
+					var strHTML = '<tr><td>'+data.data[i].ID+'</td><td>'+data.data[i].Username+'</td><td>'+data.data[i].Password+'</td><td>'+data.data[i].Email+'</td><td>'+data.data[i].Bday+'</td><td>'+data.data[i].Cellphone+'</td><td>'+data.data[i].Edu+'</td><td>'+data.data[i].Fstar+'</td><td>'+data.data[i].Interest+'</td><td>'+userLevel+'</td><td><button id="modify" data-id="'+data.data[i].ID+'" data-username="'+data.data[i].Username+'" data-password="'+data.data[i].Password+'" data-email="'+data.data[i].Email+'" data-bday="'+data.data[i].Bday+'" data-cellphone="'+data.data[i].Cellphone+'" data-edu="'+data.data[i].Edu+'" data-fstar="'+data.data[i].Fstar+'" data-interest="'+data.data[i].Interest+'" data-level="'+userLevel+'">修改</button><button id="delete" data-username="'+data.data[i].Username+'" data-id="'+data.data[i].ID+'">刪除</button></td></tr>';
+
+					$("#mybody").append(strHTML);
+
+				}
+
+				$("#mybody #delete").bind("click",function(){
+					console.log();
+					
+				if(confirm("是否確認刪除:帳號=>"+$(this).data("username")+"?")){
+					var jsonDATA = {};
+					jsonDATA["ID"] = $(this).data("id");
+					console.log(JSON.stringify(jsonDATA));
+						$.ajax({
+								type:"POST",
+								url:"member_D_api.php",
+								dataType:"json",
+								data:JSON.stringify(jsonDATA),
+								success:showdata_del,
+								error:function(){
+								alert("error-member_D_api.php");
+								}
+
+						});
+					}
+				
+				});
+
+				$("#mybody #modify").bind("click",function(){
+					console.log($(this).data("id"));
+					console.log($(this).data("username"));
+					console.log($(this).data("password"));
+					console.log($(this).data("email"));
+					console.log($(this).data("bday"));
+					console.log($(this).data("cellphone"));
+					console.log($(this).data("edu"));
+					console.log($(this).data("fstar"));
+					console.log($(this).data("interest"));
+					console.log($(this).data("level"));
+
+					$.mobile.changePage( "#update", { transition: "slideup", changeHash: false });
+					u_id = $(this).data("id");
+					$("#u_username").val($(this).data("username"));
+					$("#u_password").val($(this).data("password"));
+					$("#u_email").val($(this).data("email"));
+					$("#u_bday").val($(this).data("bday"));
+					$("#u_cellphone").val($(this).data("cellphone"));
+					$("#u_edu").val($(this).data("edu"));
+					$("#u_edu").selectmenu("refresh");
+					$("#u_fstar").val($(this).data("fstar"));
+
+					
+					var myInterest;
+					myInterest = $(this).data("interest").split("-");
+					console.log(myInterest);
+					myInterest.forEach(function(item){
+						console.log(item);
+						$.each($("input[name='u_interest']"),function(){
+							if($(this).val() == item){
+								$(this).attr("checked",true).checkboxradio("refresh");
+							}
+						});
+					});
+					// $("#u_interest").val($(this).data("interest"));
+					// $("input[type='checkbox']").attr("checked",true).checkboxradio("refresh");//**
+					// $.each($("input[name='u_interest']:checked")).checkboxradio("refresh");
+					
+					$("#u_level").val($(this).data("level"));
+					$("#u_level").selectmenu("refresh");
+
+				});
+		}
+
+		function showdata_del(data){
+			console.log(data);
+			if(data.state){
+				alert(data.message);
+				location.href="controlPanel.html";
+			}else{
+				alert(data.message);
+			}
+		}
+
+		function showdata_update(data){
+			console.log(data);
+			if(data.state){
+				alert(data.message);
+				location.href = "controlPanel.html";
+			}
+		}	
+
+		function getCookie(cname) { //**
+		  let name = cname + "=";
+		  let decodedCookie = decodeURIComponent(document.cookie);
+		  let ca = decodedCookie.split(';');
+		  for(let i = 0; i <ca.length; i++) {
+		    let c = ca[i];
+		    while (c.charAt(0) == ' ') {
+		      c = c.substring(1);
+		    }
+		    if (c.indexOf(name) == 0) {
+		      return c.substring(name.length, c.length);
+		    }
+		  }
+		  return "";
+		}
+		
+		function delCookie(name){
+          var exp = new Date();
+          exp.setTime(exp.getTime() - 1);
+          var cval = getCookie(name);
+          if (cval != null) 
+            document.cookie = name + "=" + cval + ";expires=" + exp.toGMTString()+";path=/";
+        }
+	</script>
+</head>
+<body>
+	<div data-role="page" id="home">
+		<div data-role="header" data-theme="b">
+		    <a href="#login.html"  data-icon="action" id="logout">登出</a>
+			<h1>控制台</h1>
+		</div>
+		<div role="main" class="ui-content">
+			<table data-role="table" id="movie-table" data-mode="reflow" class="ui-responsive">
+				<thead>
+					<tr>
+						<th>編號</th>
+						<th>帳號</th>
+						<th>密碼</th>
+						<th>Email</th>
+						<th>生日</th>
+						<th>手機</th>
+						<th>學歷</th>
+						<th>最愛明星</th>
+						<th>興趣</th>
+						<th>會員等級</th>
+						<th></th>
+						
+					</tr>
+				</thead>
+				<tbody id="mybody">
+					<tr>
+						<td>001</td>						
+						<td>ooo</td>
+						<td>123456</td>
+						<td>1232@rerre</td>
+						<td>20220101</td>
+						<td>123456</td>
+						<td>20220101</td>
+						<td>123456</td>
+						<td>1232rerre</td>
+						<td>1232rerre</td>
+						<td>
+						<button id="modify">修改</button>
+						<button id="delete">刪除</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			
+		</div>
+		<div data-role="footer" data-position="fixed" data-theme="b">
+			<h1>頁尾</h1>
+		</div>
+	</div>
+
+	<div data-role="page" id="update">
+		<div data-role="header" data-theme="b">
+			<h1>修改資訊</h1>			
+		</div>
+		<div role="main" class="ui-content">
+			<div data-role="filedcontain">
+				<label for="u_username">帳號</label>
+				<input type="text" id="u_username" name="u_username">
+			</div>
+			<div data-role="filedcontain">
+				<label for="u_password">密碼</label>
+				<input type="password" id="u_password" name="u_password">
+			</div>
+			<div id="error_username"></div>
+			<div data-role="filedcontain">
+				<label for="u_email">Email</label>
+				<input type="email" id="u_email" name="u_email">
+			</div>
+			<div id="error_email"></div>
+			<div data-role="main" class="ui-content">
+				<div data-role="filedcontain">
+					<label for="u_bday">生日</label>
+					<input type="date" name="u_bday" id="u_bday" value="">
+				</div>
+			</div>
+			<div data-role="main" class="ui-content">
+				<div data-role="filedcontain">
+					<label for="u_cellphone">手機</label>
+					<input type="text" name="u_cellphone" id="u_cellphone" value="">
+				</div>
+			</div>		
+			<div data-role="filedcontain">
+				<label for="u_edu">教育程度</label>
+				<select name="u_edu" id="u_edu">
+					<option value="碩博士">碩博士</option>
+					<option value="大學專科">大學(專科)</option>
+					<option value="高中職">高中(職)</option>
+					<option value="其他">其他</option>
+				</select>
+			</div>
+			<div data-role="main" class="ui-content">
+				<div data-role="filedcontain">
+					<label for="u_fstar">最愛明星</label>
+					<input type="text" name="u_fstar" id="u_fstar" value="">
+				</div>
+			</div>
+			<div data-role="fieldcontain">
+			 <fieldset data-role="controlgroup">
+				 <legend>興趣</legend>
+					 <input type="checkbox" name="u_interest" id="interest01"  value="登山" />
+					 	<label for="interest01">登山</label>
+					 <input type="checkbox" name="u_interest" id="interest02"  value="上暗網" />
+					 	<label for="interest02">上暗網</label>
+					 <input type="checkbox" name="u_interest" id="interest03"  value="品酒" />
+					 	<label for="interest03">品酒</label>
+					 <input type="checkbox" name="u_interest" id="interest04"  value="電影" />
+					 	<label for="interest04">電影</label>
+			 </fieldset>
+			</div>
+			<div data-role="filedcontain">
+				<label for="u_level">會員等級</label>
+				<select name="u_level" id="u_level">
+					<option value="A級會員">A級會員</option>
+					<option value="B級會員">B級會員</option>
+				</select>
+			</div>
+			<div class="ui-grid-a">
+				<div class="ui-block-a">
+					<a href="#" data-theme="b" data-icon="delete" data-role="button" id="cancel">取消</a>
+				</div>
+				<div class="ui-block-b">
+					<a href="#" data-theme="b" data-icon="star" data-role="button" id="u_btn_update">更新</a>
+				</div>
+			</div>
+			
+		</div>
+		<div data-role="footer" data-position="fixed" data-theme="b">
+			<h1>頁尾</h1>
+		</div>
+	</div>
+</body>
+</html>
